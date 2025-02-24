@@ -1,5 +1,6 @@
 class Game {
     field Puzzle puzzle;
+    field MoveList lastMove;
     field int row, col;
 
     constructor Game new() {
@@ -20,6 +21,10 @@ class Game {
         let exit = false;
         do drawBackground();
         do drawCursor();
+        let puzzle = Puzzle.new();
+        let lastMove = null;
+        do puzzle.loadFromId(1);
+        do drawPuzzle();
 
         while (~exit) {
             // Wait until the user presses down some key ...
@@ -35,6 +40,13 @@ class Game {
             if (key = 133) { do moveDown(); } // down arrow
             if (key = 130) { do moveLeft(); } // left arrow
             if (key = 132) { do moveRight(); } // right arrow
+
+            if ((key > 48) & (key < 58)) { // 1-9
+                do addMove(key - 48);
+            }
+            if ((key = 48) | (key = 129) | (key = 139)) { // 0 | DEL | Backsp.
+                do addMove(0);
+            }
 
             // Wait until the user releases the key ...
             while (~(key = 0)) {
@@ -89,26 +101,6 @@ class Game {
     method void drawBackground() {
         var int i, x, y;
 
-        // Temp: Write out some numbers to help anchor the grid.
-        do Output.moveCursor(2, 2);
-        do Output.printString("1 2 3 4 5 6 7 8 9");
-        do Output.moveCursor(4, 2);
-        do Output.printString("2 3 4 5 6 7 8 9 1");
-        do Output.moveCursor(6, 2);
-        do Output.printString("3 4 5 6 7 8 9 1 2");
-        do Output.moveCursor(8, 2);
-        do Output.printString("4 5 6 7 8 9 1 2 3");
-        do Output.moveCursor(10, 2);
-        do Output.printString("5 6 7 8 9 1 2 3 4");
-        do Output.moveCursor(12, 2);
-        do Output.printString("6 7 8 9 1 2 3 4 5");
-        do Output.moveCursor(14, 2);
-        do Output.printString("7 8 9 1 2 3 4 5 6");
-        do Output.moveCursor(16, 2);
-        do Output.printString("8 9 1 2 3 4 5 6 7");
-        do Output.moveCursor(18, 2);
-        do Output.printString("9 1 2 3 4 5 6 7 8");
-
         // Draw horizontal grid lines
         let x = 10;
         let y = 16;
@@ -156,24 +148,37 @@ class Game {
         return;
     }
 
-    /** Draw the game cursor at the current cell position */
-    method void drawCursor() {
-        var int x, y;
-        let x = 12 + (col * 16);
-        let y = 18 + (row * 22);
-        do Screen.drawLine(x, y, x + 12, y);
-        do Screen.drawLine(x, y, x, y + 18);
-        do Screen.drawLine(x + 12, y, x + 12, y + 18);
-        do Screen.drawLine(x, y + 18, x + 12, y + 18);
+    /** Render the initial puzzle state.
+     *
+     * Each grid cell in the puzzle is either hidden, or a clue. Clues will be
+     * rendered with the digit from the solution, and hidden cells will be
+     * rendered initially empty.
+     */
+    method void drawPuzzle() {
+        var int i, row, col;
+        var char ch;
+        while (i < 81) {
+            let ch = 32;
+            if (puzzle.isClue(i)) {
+                let ch = 48 + puzzle.getSolution(i);
+            }
+            do writeCell(row, col, ch);
+            let i = i + 1;
+            let col = col + 1;
+            if (col > 8) {
+                let row = row + 1;
+                let col = 0;
+            }
+        }
         return;
     }
 
-    /** Erase the game cursor at the current cell position */
-    method void eraseCursor() {
+    /** Draw (or erase) the game cursor at the current cell position */
+    method void drawCursorColor(boolean color) {
         var int x, y;
         let x = 12 + (col * 16);
         let y = 18 + (row * 22);
-        do Screen.setColor(false);
+        do Screen.setColor(color);
         do Screen.drawLine(x, y, x + 12, y);
         do Screen.drawLine(x, y, x, y + 18);
         do Screen.drawLine(x + 12, y, x + 12, y + 18);
@@ -182,10 +187,50 @@ class Game {
         return;
     }
 
+    /** Draw the game cursor at the current cell position */
+    method void drawCursor() {
+        do drawCursorColor(true);
+        return;
+    }
+
+    /** Erase the game cursor at the current cell position */
+    method void eraseCursor() {
+        do drawCursorColor(false);
+        return;
+    }
+
+    /** Add a player move to the game.
+     * A move sets or clears the value of the current cell. A value in the
+     * range 1-9 sets the cell to that symbol, any value outside that range
+     * clears it. Each valid move is added to a list of player moves so that we
+     * can undo/redo them later.
+     */
+    method void addMove(int value) {
+        // TODO: prevent updates to clue cells
+
+        if (lastMove = null) {
+            let lastMove = MoveList.new(row, col, value, null, null);
+        } else {
+            let lastMove = lastMove.append(row, col, value);
+        }
+        if ((value > 0) & (value < 10)) {
+            do writeCell(row, col, value + 48);
+        } else {
+            do clearCell(row, col);
+        }
+
+        // TODO: check whether the puzzle is now complete and mark it for correctness.
+
+        return;
+    }
+
     method void dispose() {
         if (~(puzzle = null)) {
             do puzzle.dispose();
             let puzzle = null;
+        }
+        if (~(lastMove = null)) {
+            do lastMove.disposeBackwards();
         }
         do Memory.deAlloc(this);
         return;

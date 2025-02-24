@@ -1,0 +1,84 @@
+class MoveList {
+    field Array data;
+    field MoveList prev;
+    field MoveList next;
+
+    constructor MoveList new(
+            int row, int col, int value,
+            MoveList prevList, MoveList nextList) {
+        let data = Array.new(3);
+        let data[0] = row;
+        let data[1] = col;
+        let data[2] = value;
+        let prev = prevList;
+        let next = nextList;
+        return this;
+    }
+
+    method MoveList getPrev() { return prev; }
+    method MoveList getNext() { return next; }
+
+    method void setPrev(MoveList list) {
+        let prev = list;
+        return;
+    }
+
+    method void setNext(MoveList list) {
+        let next = list;
+        return;
+    }
+
+    /** Create a new list element, and add it to the list immediately after
+     * this element. Return the newly created list element.
+     */
+    method MoveList append(int row, int col, int value) {
+        var MoveList node;
+        let node = MoveList.new(row, col, value, this, next);
+        if (~(next = null)) {
+            do next.setPrev(node);
+        }
+        let next = node;
+        return node;
+    }
+
+    /** Remove this list element from the list and return it. Does NOT dispose
+     * the elmeent.
+     */
+    method MoveList remove() {
+        if (~(next = null)) {
+            do next.setPrev(prev);
+        }
+        if (~(prev = null)) {
+            do prev.setNext(next);
+        }
+        let prev = null;
+        let next = null;
+        return this;
+    }
+
+    /** disposeBackwards() scans back through the list starting from the
+     * current node, so it should always be called on the last element of the
+     * list to ensure that the whole list is disposed.
+     */
+    method void disposeBackwards() {
+        var MoveList node, p;
+        let node = this;
+        let p = prev;
+        while (~(p = null)) {
+            let node = p;
+            let p = node.getPrev();
+            do node.dispose();
+        }
+        do dispose();
+        return;
+    }
+
+    /** Dispose this list element only. Normally this should be called by
+     * another method that disposes an entire list, not called directly.
+     */
+    method void dispose() {
+        do data.dispose();
+        do Memory.deAlloc(this);
+        return;
+    }
+}

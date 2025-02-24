@@ -1,5 +1,6 @@
 class Game {
     field Puzzle puzzle;
+    field int row, col;
 
     constructor Game new() {
         return this;
@@ -18,6 +19,7 @@ class Game {
 
         let exit = false;
         do drawBackground();
+        do drawCursor();
 
         while (~exit) {
             // Wait until the user presses down some key ...
@@ -29,12 +31,57 @@ class Game {
                 let exit = true;
             }
 
+            if (key = 131) { do moveUp(); } // up arrow
+            if (key = 133) { do moveDown(); } // down arrow
+            if (key = 130) { do moveLeft(); } // left arrow
+            if (key = 132) { do moveRight(); } // right arrow
+
             // Wait until the user releases the key ...
             while (~(key = 0)) {
                 let key = Keyboard.keyPressed();
             }
 
             do Sys.wait(4);
+        }
+        return;
+    }
+
+    /** Move the game cursor up one cell, unless already at the top. */
+    method void moveUp() {
+        if (row > 0) {
+            do eraseCursor();
+            let row = row - 1;
+            do drawCursor();
+        }
+        return;
+    }
+
+    /** Move the game cursor down one cell, unless already at the bottom. */
+    method void moveDown() {
+        if (row < 8) {
+            do eraseCursor();
+            let row = row + 1;
+            do drawCursor();
+        }
+        return;
+    }
+
+    /** Move the game cursor left one cell, unless already at the left edge. */
+    method void moveLeft() {
+        if (col > 0) {
+            do eraseCursor();
+            let col = col - 1;
+            do drawCursor();
+        }
+        return;
+    }
+
+    /** Move the game cursor right one cell, unless already at the right edge. */
+    method void moveRight() {
+        if (col < 8) {
+            do eraseCursor();
+            let col = col + 1;
+            do drawCursor();
         }
         return;
     }
@@ -66,7 +113,7 @@ class Game {
         let x = 10;
         let y = 16;
 
-        // Double the outer border and 3x3 sub-grid borders
+        // Double the outer border and the 3x3 sub-grid borders
         do Screen.drawLine(x - 1, y - 1, x + 145, y - 1);
         do Screen.drawLine(x - 1, y + 199, x + 145, y + 199);
         do Screen.drawLine(x, y + 65, x + 144, y + 65);
@@ -98,7 +145,7 @@ class Game {
 
     /** Print a character into a game grid cell */
     method void writeCell(int row, int col, char value) {
-        do Output.moveCursor(row * 2, col * 2);
+        do Output.moveCursor(2 + (row * 2), 2 + (col * 2));
         do Output.printChar(value);
         return;
     }
@@ -106,6 +153,33 @@ class Game {
     /** Empty a game grid cell */
     method void clearCell(int row, int col) {
         do writeCell(row, col, 32); // Space
+        return;
+    }
+
+    /** Draw the game cursor at the current cell position */
+    method void drawCursor() {
+        var int x, y;
+        let x = 12 + (col * 16);
+        let y = 18 + (row * 22);
+        do Screen.drawLine(x, y, x + 12, y);
+        do Screen.drawLine(x, y, x, y + 18);
+        do Screen.drawLine(x + 12, y, x + 12, y + 18);
+        do Screen.drawLine(x, y + 18, x + 12, y + 18);
+        return;
+    }
+
+    /** Erase the game cursor at the current cell position */
+    method void eraseCursor() {
+        var int x, y;
+        let x = 12 + (col * 16);
+        let y = 18 + (row * 22);
+        do Screen.setColor(false);
+        do Screen.drawLine(x, y, x + 12, y);
+        do Screen.drawLine(x, y, x, y + 18);
+        do Screen.drawLine(x + 12, y, x + 12, y + 18);
+        do Screen.drawLine(x, y + 18, x + 12, y + 18);
+        do Screen.setColor(true);
+        return;
     }
 
     method void dispose() {

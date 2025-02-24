@@ -1,0 +1,119 @@
+class Game {
+    field Puzzle puzzle;
+
+    constructor Game new() {
+        return this;
+    }
+
+    /** Play a game of sudoku.
+     *
+     * Draw the main UI of the game, and respond to the user's keypress events.
+     *
+     * The game will continue running indefinitely until the user quits by
+     * pressing the 'q' key.
+     */
+    method void run() {
+        var boolean exit;
+        var char key;
+
+        let exit = false;
+        do drawBackground();
+
+        while (~exit) {
+            // Wait until the user presses down some key ...
+            while (key = 0) {
+                let key = Keyboard.keyPressed();
+            }
+
+            if ((key = 81) | (key = 113)) { // Q | q
+                let exit = true;
+            }
+
+            // Wait until the user releases the key ...
+            while (~(key = 0)) {
+                let key = Keyboard.keyPressed();
+            }
+
+            do Sys.wait(4);
+        }
+        return;
+    }
+
+    method void drawBackground() {
+        var int i, x, y;
+
+        // Temp: Write out some numbers to help anchor the grid.
+        do Output.moveCursor(2, 2);
+        do Output.printString("1 2 3 4 5 6 7 8 9");
+        do Output.moveCursor(4, 2);
+        do Output.printString("2 3 4 5 6 7 8 9 1");
+        do Output.moveCursor(6, 2);
+        do Output.printString("3 4 5 6 7 8 9 1 2");
+        do Output.moveCursor(8, 2);
+        do Output.printString("4 5 6 7 8 9 1 2 3");
+        do Output.moveCursor(10, 2);
+        do Output.printString("5 6 7 8 9 1 2 3 4");
+        do Output.moveCursor(12, 2);
+        do Output.printString("6 7 8 9 1 2 3 4 5");
+        do Output.moveCursor(14, 2);
+        do Output.printString("7 8 9 1 2 3 4 5 6");
+        do Output.moveCursor(16, 2);
+        do Output.printString("8 9 1 2 3 4 5 6 7");
+        do Output.moveCursor(18, 2);
+        do Output.printString("9 1 2 3 4 5 6 7 8");
+
+        // Draw horizontal grid lines
+        let x = 10;
+        let y = 16;
+
+        // Double the outer border and 3x3 sub-grid borders
+        do Screen.drawLine(x - 1, y - 1, x + 145, y - 1);
+        do Screen.drawLine(x - 1, y + 199, x + 145, y + 199);
+        do Screen.drawLine(x, y + 65, x + 144, y + 65);
+        do Screen.drawLine(x, y + 131, x + 144, y + 131);
+
+        do Screen.drawLine(x - 1, y - 1, x - 1, y + 199);
+        do Screen.drawLine(x + 145, y - 1, x + 145, y + 199);
+        do Screen.drawLine(x + 49, y, x + 49, y + 198);
+        do Screen.drawLine(x + 97, y, x + 97, y + 198);
+
+        let i = 0;
+        while (i < 10) {
+            do Screen.drawLine(x, y, x + 144, y);
+            let i = i + 1;
+            let y = y + 22;
+        }
+
+        // Draw vertical grid lines
+        let y = 16;
+        let i = 0;
+        while (i < 10) {
+            do Screen.drawLine(x, y, x, y + 198);
+            let i = i + 1;
+            let x = x + 16;
+        }
+
+        return;
+    }
+
+    /** Print a character into a game grid cell */
+    method void writeCell(int row, int col, char value) {
+        do Output.moveCursor(row * 2, col * 2);
+        do Output.printChar(value);
+        return;
+    }
+
+    /** Empty a game grid cell */
+    method void clearCell(int row, int col) {
+        do writeCell(row, col, 32); // Space
+    }
+
+    method void dispose() {
+        if (~(puzzle = null)) {
+            do puzzle.dispose();
+            let puzzle = null;
+        }
+        do Memory.deAlloc(this);
+        return;
+    }
+}

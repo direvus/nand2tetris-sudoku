@@ -1,0 +1,13 @@
+/** A Puzzle object represents an individual Sudoku puzzle. */
+class Puzzle {
+    constructor Puzzle new() {
+        // TODO
+        return this;
+    }
+
+    method void dispose() {
+        // TODO
+        do Memory.deAlloc(this);
+        return;
+    }
+}

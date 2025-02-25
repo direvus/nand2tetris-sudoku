@@ -1,7 +1,8 @@
 class Game {
     field Puzzle puzzle;
     field MoveList lastMove;
-    field int row, col;
+    field Array answers;
+    field int row, col, nEmpty;
 
     constructor Game new() {
         return this;
@@ -25,7 +26,9 @@ class Game {
         let lastMove = null;
 
         do drawBackground();
-        do puzzle.loadFromId(1);
+        let nEmpty = puzzle.loadFromId(1);
+        let answers = Array.new(81);
+
         do drawPuzzle();
         do drawCursor();
 
@@ -50,12 +53,12 @@ class Game {
             if ((key = 48) | (key = 129) | (key = 139)) { // 0 | DEL | Backsp.
                 do addMove(0);
             }
+            do Sys.wait(4);
 
             // Wait until the user releases the key ...
             while (~(key = 0)) {
                 let key = Keyboard.keyPressed();
             }
-
             do Sys.wait(4);
         }
         return;
@@ -242,26 +245,49 @@ class Game {
      * range 1-9 sets the cell to that symbol, any value outside that range
      * clears it. Each valid move is added to a list of player moves so that we
      * can undo/redo them later.
+     *
+     * If the current cell is a puzzle hint, the move will be prevented.
+     *
+     * If the move completes the puzzle (i.e., no empty cells remain) then
+     * check whether the solution is correct and display a message with the
+     * outcome. 
      */
     method void addMove(int value) {
+        var int i;
+
         do clearMessage();
         if (puzzle.isClue(Game.cellRefToIndex(row, col))) {
             do printMessage("Cannot change the value of a hint cell!");
             return;
         }
 
+        // Move is valid, record it.
         if (lastMove = null) {
             let lastMove = MoveList.new(row, col, value, null, null);
         } else {
             let lastMove = lastMove.append(row, col, value);
         }
+
+        let i = Game.cellRefToIndex(row, col);
         if ((value > 0) & (value < 10)) {
             do writeCell(row, col, value + 48);
+            if (answers[i] = 0) {
+                let nEmpty = nEmpty - 1;
+            }
+            let answers[i] = value;
         } else {
             do clearCell(row, col);
+            let nEmpty = nEmpty + 1;
+            let answers[i] = 0;
         }
 
-        // TODO: check whether the puzzle is now complete and mark it for correctness.
+        if (nEmpty = 0) {
+            if (puzzle.checkAnswers(answers)) {
+                do printMessage("CORRECT - Well done!");
+            } else {
+                do printMessage("INCORRECT - Please check your answers and try again");
+            }
+        }
 
         return;
     }

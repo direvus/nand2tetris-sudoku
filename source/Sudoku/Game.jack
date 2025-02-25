@@ -3,19 +3,73 @@ class Game {
     field MoveList lastMove;
     field Array answers;
     field int row, col, nEmpty;
+    static int nPuzzles;
 
     constructor Game new() {
+        let nPuzzles = 1;
         return this;
     }
 
-    /** Play a game of sudoku.
+    /** Run the main game loop.
      *
-     * Draw the main UI of the game, and respond to the user's keypress events.
-     *
-     * The game will continue running indefinitely until the user quits by
-     * pressing the 'q' key.
+     * Initially display the main menu, which allows the user to select a
+     * predefined puzzle. When the user selects a puzzle, launch the puzzle UI.
+     * When the user exits the puzzle, display the main menu again.
      */
     method void run() {
+        var boolean exit;
+        var String input, maxPuzzleId;
+        var char ch;
+        var int puzzleId;
+
+        let maxPuzzleId = String.new(5);
+        do maxPuzzleId.setInt(nPuzzles);
+
+        while (~exit) {
+            do Screen.clearScreen();
+
+            do Output.moveCursor(2, 28);
+            do Output.printString("SUDOKU");
+            do Output.moveCursor(3, 28);
+            do Output.printString("======");
+
+            do Output.moveCursor(5, 14);
+            do Output.printString("Enter a number [1-");
+            do Output.printString(maxPuzzleId);
+            do Output.printString("] to select a puzzle,");
+            do Output.moveCursor(6, 16);
+            do Output.printString("or enter [Q] to quit: ");
+
+            let input = Keyboard.readLine("");
+            let puzzleId = input.intValue();
+
+            if (input.length() > 0) {
+                let ch = input.charAt(0);
+                if ((ch = 81) | (ch = 113)) { // Q | q
+                    let exit = true;
+                } else {
+                    if ((puzzleId > 0) & (puzzleId < (nPuzzles + 1))) {
+                        do play(puzzleId);
+                    }
+                }
+            }
+            do input.dispose();
+            do Sys.wait(4);
+        }
+        do input.dispose();
+        do maxPuzzleId.dispose();
+        return;
+    }
+
+    /** Play a sudoku puzzle.
+     *
+     * Draw the puzzle UI, load in a puzzle by its ID, and respond to the
+     * user's keypress events.
+     *
+     * The game will continue running indefinitely until the user exits to the
+     * main menu by pressing the 'x' key.
+     */
+    method void play(int puzzleId) {
         var boolean exit;
         var char key;
 
@@ -25,6 +79,7 @@ class Game {
         let puzzle = Puzzle.new();
         let lastMove = null;
 
+        do Screen.clearScreen();
         do drawBackground();
         let nEmpty = puzzle.loadFromId(1);
         let answers = Array.new(81);
@@ -36,9 +91,10 @@ class Game {
             // Wait until the user presses down some key ...
             while (key = 0) {
                 let key = Keyboard.keyPressed();
+                do Sys.wait(1);
             }
 
-            if ((key = 81) | (key = 113)) { // Q | q
+            if ((key = 88) | (key = 120)) { // X | x
                 let exit = true;
             }
 
@@ -58,8 +114,18 @@ class Game {
             // Wait until the user releases the key ...
             while (~(key = 0)) {
                 let key = Keyboard.keyPressed();
+                do Sys.wait(1);
             }
-            do Sys.wait(4);
+        }
+
+        // We are exiting to the main menu, so clean up puzzle UI resources.
+        do answers.dispose();
+        do puzzle.dispose();
+        let answers = null;
+        let puzzle = null;
+        if (~(lastMove = null)) {
+            do lastMove.disposeBackwards();
+            let lastMove = null;
         }
         return;
     }
@@ -104,6 +170,7 @@ class Game {
         return;
     }
 
+    /** Draw the static background elements of the puzzle UI. */
     method void drawBackground() {
         var int i, x, y;
 
@@ -138,19 +205,21 @@ class Game {
             let x = x + 16;
         }
 
-        // Write the explanatory text
+        // Write the instructional text
         let x = 28;
         do Output.moveCursor(2, x);
         do Output.printString("SUDOKU");
         do Output.moveCursor(3, x);
         do Output.printString("======");
 
-        do Output.moveCursor(5, x);
-        do Output.printString("[Arrow keys]: Choose a grid cell");
         do Output.moveCursor(7, x);
-        do Output.printString("[1-9]: Set the value of the cell");
+        do Output.printString("[Arrow keys]: Choose a grid cell");
         do Output.moveCursor(9, x);
+        do Output.printString("[1-9]: Set the value of the cell");
+        do Output.moveCursor(11, x);
         do Output.printString("[0, Del, Backsp]: Clear the cell");
+        do Output.moveCursor(13, x);
+        do Output.printString("[X]: Exit to the menu");
 
         return;
     }
@@ -299,6 +368,10 @@ class Game {
         }
         if (~(lastMove = null)) {
             do lastMove.disposeBackwards();
+            let lastMove = null;
+        }
+        if (~(answers = null)) {
+            do answers.dispose();
         }
         do Memory.deAlloc(this);
         return;

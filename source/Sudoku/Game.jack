@@ -19,12 +19,15 @@ class Game {
         var char key;
 
         let exit = false;
-        do drawBackground();
-        do drawCursor();
+        let row = 0;
+        let col = 0;
         let puzzle = Puzzle.new();
         let lastMove = null;
+
+        do drawBackground();
         do puzzle.loadFromId(1);
         do drawPuzzle();
+        do drawCursor();
 
         while (~exit) {
             // Wait until the user presses down some key ...
@@ -132,6 +135,20 @@ class Game {
             let x = x + 16;
         }
 
+        // Write the explanatory text
+        let x = 28;
+        do Output.moveCursor(2, x);
+        do Output.printString("SUDOKU");
+        do Output.moveCursor(3, x);
+        do Output.printString("======");
+
+        do Output.moveCursor(5, x);
+        do Output.printString("[Arrow keys]: Choose a grid cell");
+        do Output.moveCursor(7, x);
+        do Output.printString("[1-9]: Set the value of the cell");
+        do Output.moveCursor(9, x);
+        do Output.printString("[0, Del, Backsp]: Clear the cell");
+
         return;
     }
 
@@ -146,6 +163,10 @@ class Game {
     method void clearCell(int row, int col) {
         do writeCell(row, col, 32); // Space
         return;
+    }
+
+    function int cellRefToIndex(int row, int col) {
+        return (row * 9) + col;
     }
 
     /** Render the initial puzzle state.
@@ -199,6 +220,23 @@ class Game {
         return;
     }
 
+    /** Erase the message area of the game screen */
+    method void clearMessage() {
+        do Screen.setColor(false);
+        do Screen.drawRectangle(0, 218, 511, 255);
+        do Screen.setColor(true);
+        return;
+    }
+
+    /** Print some text to the message area of the screen. Caller should limit
+     * the message parameter to a maximum of 62 characters.
+     */
+    method void printMessage(String message) {
+        do Output.moveCursor(21, 2);
+        do Output.printString(message);
+        return;
+    }
+
     /** Add a player move to the game.
      * A move sets or clears the value of the current cell. A value in the
      * range 1-9 sets the cell to that symbol, any value outside that range
@@ -206,7 +244,11 @@ class Game {
      * can undo/redo them later.
      */
     method void addMove(int value) {
-        // TODO: prevent updates to clue cells
+        do clearMessage();
+        if (puzzle.isClue(Game.cellRefToIndex(row, col))) {
+            do printMessage("Cannot change the value of a hint cell!");
+            return;
+        }
 
         if (lastMove = null) {
             let lastMove = MoveList.new(row, col, value, null, null);

@@ -237,6 +237,7 @@ class Game {
         return;
     }
 
+    /** Convert a grid cell reference (row, col) to a flat array index */
     function int cellRefToIndex(int row, int col) {
         return (row * 9) + col;
     }

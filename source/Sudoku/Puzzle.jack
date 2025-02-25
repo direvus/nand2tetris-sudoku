@@ -1,4 +1,16 @@
-/** A Puzzle object represents an individual Sudoku puzzle. */
+/** A Puzzle object represents an individual Sudoku puzzle.
+ *
+ * It consists of the puzzle solution, as an array of 81 integers, and a clue
+ * mask as an array of 81 booleans. Each element in the clue mask indicates
+ * whether the corresponding element of the solution should be initially shown
+ * to the player (a clue) or hidden.
+ *
+ * All Puzzle methods use a flat array indexing scheme which treats the Sudoku
+ * grid in reading order (top-down and left-right). So the grid cell in the 2nd
+ * row and 2nd column would have the array index 10.
+ *
+ * Puzzle objects are indended to be immutable once they are loaded.
+ */
 class Puzzle {
     field Array solution;
     field Array clues;
@@ -146,6 +158,7 @@ class Puzzle {
         return 0;
     }
 
+    /** Get the solution value for a given cell */
     method int getSolution(int index) {
         return solution[index];
     }

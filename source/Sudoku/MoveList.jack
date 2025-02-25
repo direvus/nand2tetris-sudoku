@@ -1,3 +1,4 @@
+/** A doubly-linked list used to store player actions. */
 class MoveList {
     field Array data;
     field MoveList prev;

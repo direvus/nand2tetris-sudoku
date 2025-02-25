@@ -6,7 +6,7 @@ class Game {
     static int nPuzzles;
 
     constructor Game new() {
-        let nPuzzles = 1;
+        let nPuzzles = 10;
         return this;
     }
 
@@ -18,12 +18,9 @@ class Game {
      */
     method void run() {
         var boolean exit;
-        var String input, maxPuzzleId;
+        var String input;
         var char ch;
         var int puzzleId;
-
-        let maxPuzzleId = String.new(5);
-        do maxPuzzleId.setInt(nPuzzles);
 
         while (~exit) {
             do Screen.clearScreen();
@@ -35,7 +32,7 @@ class Game {
 
             do Output.moveCursor(5, 14);
             do Output.printString("Enter a number [1-");
-            do Output.printString(maxPuzzleId);
+            do Output.printInt(nPuzzles);
             do Output.printString("] to select a puzzle,");
             do Output.moveCursor(6, 16);
             do Output.printString("or enter [Q] to quit: ");
@@ -57,7 +54,6 @@ class Game {
             do Sys.wait(4);
         }
         do input.dispose();
-        do maxPuzzleId.dispose();
         return;
     }
 
@@ -80,8 +76,8 @@ class Game {
         let lastMove = null;
 
         do Screen.clearScreen();
-        do drawBackground();
-        let nEmpty = puzzle.loadFromId(1);
+        do drawBackground(puzzleId);
+        let nEmpty = puzzle.loadFromId(puzzleId);
         let answers = Array.new(81);
 
         do drawPuzzle();
@@ -171,7 +167,7 @@ class Game {
     }
 
     /** Draw the static background elements of the puzzle UI. */
-    method void drawBackground() {
+    method void drawBackground(int puzzleId) {
         var int i, x, y;
 
         // Draw horizontal grid lines
@@ -212,13 +208,17 @@ class Game {
         do Output.moveCursor(3, x);
         do Output.printString("======");
 
-        do Output.moveCursor(7, x);
-        do Output.printString("[Arrow keys]: Choose a grid cell");
+        do Output.moveCursor(5, x);
+        do Output.printString("PUZZLE #");
+        do Output.printInt(puzzleId);
+
         do Output.moveCursor(9, x);
-        do Output.printString("[1-9]: Set the value of the cell");
+        do Output.printString("[Arrow keys]: Choose a grid cell");
         do Output.moveCursor(11, x);
-        do Output.printString("[0, Del, Backsp]: Clear the cell");
+        do Output.printString("[1-9]: Set the value of the cell");
         do Output.moveCursor(13, x);
+        do Output.printString("[0, Del, Backsp]: Clear the cell");
+        do Output.moveCursor(15, x);
         do Output.printString("[X]: Exit to the menu");
 
         return;

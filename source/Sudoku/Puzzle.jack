@@ -9,7 +9,7 @@
  * grid in reading order (top-down and left-right). So the grid cell in the 2nd
  * row and 2nd column would have the array index 10.
  *
- * Puzzle objects are indended to be immutable once they are loaded.
+ * Puzzle objects are intended to be immutable once they are loaded.
  */
 class Puzzle {
     field Array solution;
